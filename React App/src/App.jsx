@@ -7,40 +7,50 @@ import './App.css';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState(''); 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const ITEMS_PER_PAGE = 8;
-
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
     }, 500);
 
-   
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
- 
   useEffect(() => {
-    // Axtarışa görə filtrləmə (debouncedSearch əsasında)
-    const filtered = dummyMovies.filter((movie) =>
-      movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
-    );
+    setLoading(true);
+    setError(null);
 
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const timer = setTimeout(() => {
+      try {
+        const filtered = dummyMovies.filter((movie) =>
+          movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
+        );
 
-    setItems(paginatedItems);
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+        setItems(paginatedItems);
+      } catch (err) {
+        setError('Məlumatların yüklənməsində xəta baş verdi.');
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [debouncedSearch, currentPage]);
 
   const handleSearchChange = (term) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
-
 
   const filteredTotal = dummyMovies.filter((movie) =>
     movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
@@ -55,13 +65,25 @@ export default function App() {
         <SearchBar searchTerm={searchTerm} setSearchTerm={handleSearchChange} />
       </header>
       <main className="main-content">
-        <ResultsList items={items} />
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+        {loading && <div className="status-message">Yüklənir...</div>}
+
+        {!loading && error && <div className="status-message error">{error}</div>}
+
+        {!loading && !error && items.length === 0 && (
+          <div className="status-message empty">Heç bir film tapılmadı.</div>
+        )}
+
+        {!loading && !error && items.length > 0 && (
+          <>
+            <ResultsList items={items} />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
