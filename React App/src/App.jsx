@@ -7,31 +7,43 @@ import './App.css';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(''); 
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   const ITEMS_PER_PAGE = 8;
 
+
   useEffect(() => {
-    // Axtarışa görə filtrləmə
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+
+   
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+ 
+  useEffect(() => {
+    // Axtarışa görə filtrləmə (debouncedSearch əsasında)
     const filtered = dummyMovies.filter((movie) =>
-      movie.Title.toLowerCase().includes(searchTerm.toLowerCase())
+      movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
 
-    // Səhifələmə hesablanması (Slice olunur)
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     setItems(paginatedItems);
-  }, [searchTerm, currentPage]);
+  }, [debouncedSearch, currentPage]);
 
   const handleSearchChange = (term) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
+
   const filteredTotal = dummyMovies.filter((movie) =>
-    movie.Title.toLowerCase().includes(searchTerm.toLowerCase())
+    movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
   ).length;
 
   const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
