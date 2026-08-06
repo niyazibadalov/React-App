@@ -1,25 +1,24 @@
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
-  if (totalPages <= 1) return null;
-
   return (
     <div className="pagination">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="btn-page"
       >
         Əvvəlki
       </button>
-      <span className="page-info">
+
+      <span>
         Səhifə {currentPage} / {totalPages}
       </span>
+
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="btn-page"
       >
         Növbəti
       </button>
     </div>
   );
+
 }
