@@ -24,11 +24,15 @@ export default function App() {
   }, [searchTerm]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     setLoading(true);
     setError(null);
 
     const timer = setTimeout(() => {
       try {
+        if (controller.signal.aborted) return;
+
         const filtered = dummyMovies.filter((movie) =>
           movie.Title.toLowerCase().includes(debouncedSearch.toLowerCase())
         );
@@ -38,13 +42,20 @@ export default function App() {
 
         setItems(paginatedItems);
       } catch (err) {
-        setError('Məlumatların yüklənməsində xəta baş verdi.');
+        if (!controller.signal.aborted) {
+          setError('Məlumatların yüklənməsində xəta baş verdi.');
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [debouncedSearch, currentPage]);
 
   const handleSearchChange = (term) => {
